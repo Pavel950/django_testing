@@ -1,46 +1,36 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
-
-from notes.models import Note
-
-User = get_user_model()
+from notes.forms import NoteForm
+from notes.tests.test_shared_data import TestPrepared
 
 
-class TestContent(TestCase):
+class TestContent(TestPrepared):
+    def test_notes_list_for_user(self):
+        """Тест: в список заметок одного пользователя
+        не попадают заметки другого пользователя.
+        """
+        response = self.reader_client.get(self.URL_NOTES_LIST)
+        object_list = response.context['object_list']
+        self.assertEqual(len(object_list), 0)
 
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='author')
-        cls.reader = User.objects.create(username='reader')
-        cls.note = Note.objects.create(
-            title='title',
-            text='text',
-            slug='slug',
-            author=cls.author
-        )
-
-    def test_notes_list_for_different_users(self):
-        users_note_in_list = (
-            (self.author, True),
-            (self.reader, False),
-        )
-        url = reverse('notes:list')
-        for user, note_in_list in users_note_in_list:
-            with self.subTest(user=user):
-                self.client.force_login(user)
-                response = self.client.get(url)
-                object_list = response.context['object_list']
-                self.assertEqual((self.note in object_list), note_in_list)
+    def test_notes_list_for_author(self):
+        """Тест: отдельная заметка передаётся на страницу
+        со списком заметок автора.
+        """
+        response = self.author_client.get(self.URL_NOTES_LIST)
+        object_list = response.context['object_list']
+        self.assertEqual(len(object_list), 1)
+        note_from_list = object_list[0]
+        self.assertEqual(note_from_list.title, self.note.title)
+        self.assertEqual(note_from_list.text, self.note.text)
+        self.assertEqual(note_from_list.slug, self.note.slug)
+        self.assertEqual(note_from_list.author, self.note.author)
 
     def test_pages_contains_form(self):
-        urls = (
-            ('notes:add', None),
-            ('notes:edit', (self.note.slug,)),
-        )
-        self.client.force_login(self.author)
-        for name, args in urls:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
-                response = self.client.get(url)
+        """Тест: на страницы создания и редактирования заметки
+        передаются формы.
+        """
+        urls = (self.URL_NOTE_ADD, self.URL_NOTE_EDIT)
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.author_client.get(url)
                 self.assertIn('form', response.context)
+                self.assertIsInstance(response.context['form'], NoteForm)

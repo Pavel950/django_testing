@@ -1,30 +1,18 @@
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+from django.conf import settings
 from django.urls import reverse
-from django.utils import timezone
 
 from news.models import Comment, News
-from yanews import settings
 
-
-TOMORROW = 1
+COMMENT_COUNT = 5
 
 
 @pytest.fixture
 def news():
     news = News.objects.create(title='Заголовок', text='Текст')
     return news
-
-
-@pytest.fixture
-def news_id_for_args(news):
-    return news.id,
-
-
-@pytest.fixture
-def news_url(news):
-    return reverse('news:detail', args=(news.id,))
 
 
 @pytest.fixture
@@ -49,30 +37,15 @@ def comment(news, author):
 
 
 @pytest.fixture
-def comment_tomorrow(news, author):
-    comment_tomorrow = Comment.objects.create(
-        news=news,
-        author=author,
-        text='Текст еще одного комментария'
+def create_comment_set(news, author):
+    Comment.objects.bulk_create(
+        Comment(
+            news=news,
+            author=author,
+            text='Текст комментария {index}'
+        )
+        for index in range(COMMENT_COUNT)
     )
-    comment_tomorrow.created = timezone.now() + timedelta(days=TOMORROW)
-    comment_tomorrow.save()
-    return comment_tomorrow
-
-
-@pytest.fixture
-def comment_id_for_args(comment):
-    return comment.id,
-
-
-@pytest.fixture
-def delete_comment_url(comment_id_for_args):
-    return reverse('news:delete', args=comment_id_for_args)
-
-
-@pytest.fixture
-def edit_comment_url(comment_id_for_args):
-    return reverse('news:edit', args=comment_id_for_args)
 
 
 @pytest.fixture
@@ -86,3 +59,38 @@ def create_news_set():
         )
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     )
+
+
+@pytest.fixture
+def url_comment_delete(comment):
+    return reverse('news:delete', args=(comment.id,))
+
+
+@pytest.fixture
+def url_comment_edit(comment):
+    return reverse('news:edit', args=(comment.id,))
+
+
+@pytest.fixture
+def url_home():
+    return reverse('news:home')
+
+
+@pytest.fixture
+def url_news_detail(news):
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture
+def url_login():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def url_logout():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def url_signup():
+    return reverse('users:signup')
