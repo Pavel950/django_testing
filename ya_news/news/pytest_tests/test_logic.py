@@ -80,7 +80,6 @@ def test_author_can_edit_comment(
     assertRedirects(response, f'{url_news_detail}#comments')
     comment_set_new = set(Comment.objects.all())
     assert len(comment_set_new.difference(comment_set)) == 0
-    assert len(comment_set) == len(comment_set_new) == 1
     comment = comment_set_new.pop()
     assert comment.text == FORM_DATA_NEW['text']
     assert comment.news == news
@@ -97,7 +96,7 @@ def test_user_cant_edit_comment_of_another_user(
     response = admin_client.post(url_comment_edit, data=FORM_DATA_NEW)
     assert response.status_code == HTTPStatus.NOT_FOUND
     comment_set_new = set(Comment.objects.all())
-    assert len(comment_set) == len(comment_set_new) == 1
+    assert len(comment_set_new.difference(comment_set)) == 0
     comment = comment_set.pop()
     comment_new = comment_set_new.pop()
     assert comment.text == comment_new.text

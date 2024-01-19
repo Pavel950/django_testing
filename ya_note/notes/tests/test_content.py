@@ -1,23 +1,27 @@
 from notes.forms import NoteForm
+from notes.models import Note
 from notes.tests.test_shared_data import TestPrepared
 
 
 class TestContent(TestPrepared):
+
     def test_notes_list_for_user(self):
         """Тест: в список заметок одного пользователя
         не попадают заметки другого пользователя.
         """
+        reader_notes_num = Note.objects.filter(author=self.reader).count()
         response = self.reader_client.get(self.URL_NOTES_LIST)
         object_list = response.context['object_list']
-        self.assertEqual(len(object_list), 0)
+        self.assertEqual(len(object_list), reader_notes_num)
 
     def test_notes_list_for_author(self):
         """Тест: отдельная заметка передаётся на страницу
         со списком заметок автора.
         """
+        author_notes_num = Note.objects.filter(author=self.author).count()
         response = self.author_client.get(self.URL_NOTES_LIST)
         object_list = response.context['object_list']
-        self.assertEqual(len(object_list), 1)
+        self.assertEqual(len(object_list), author_notes_num)
         note_from_list = object_list[0]
         self.assertEqual(note_from_list.title, self.note.title)
         self.assertEqual(note_from_list.text, self.note.text)

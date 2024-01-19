@@ -8,6 +8,7 @@ from notes.tests.test_shared_data import TestPrepared
 
 
 class TestNoteCreation(TestPrepared):
+
     def test_anonymous_user_cant_create_note(self):
         """Тест: анонимный пользователь не может создать заметку."""
         notes_num = Note.objects.count()
@@ -68,6 +69,7 @@ class TestNoteCreation(TestPrepared):
 
 
 class TestNoteEditDelete(TestPrepared):
+
     def test_author_can_delete_note(self):
         """Тест: пользователь может удалять свои заметки."""
         notes_num = Note.objects.count()

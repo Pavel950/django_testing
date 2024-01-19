@@ -6,16 +6,14 @@ from news.forms import CommentForm
 pytestmark = pytest.mark.django_db
 
 
-@pytest.mark.usefixtures('create_news_set')
-def test_news_count(client, url_home):
+def test_news_count(client, create_news_set, url_home):
     """Тест: количество новостей на главной странице — не более 10."""
     response = client.get(url_home)
     object_list = response.context['object_list']
     assert len(object_list) == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
-@pytest.mark.usefixtures('create_news_set')
-def test_news_order(client, url_home):
+def test_news_order(client, create_news_set, url_home):
     """Тест: новости отсортированы от самой свежей к самой старой."""
     response = client.get(url_home)
     object_list = response.context['object_list']
@@ -44,8 +42,7 @@ def test_comment_form_availability(
         assert isinstance(response.context['form'], CommentForm)
 
 
-@pytest.mark.usefixtures('create_comment_set')
-def test_comment_order(client, url_news_detail):
+def test_comment_order(client, create_comment_set, url_news_detail):
     """Тест: комментарии на странице отдельной новости
     отсортированы в хронологическом порядке.
     """
